@@ -1,0 +1,8 @@
+[package]
+name = "csv_to_gv_aon"
+version = "0.1.0"
+authors = ["Prajna Sariputra <putr4.s@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+horrorshow = "0.6.6"

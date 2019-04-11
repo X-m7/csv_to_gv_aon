@@ -1,0 +1,14 @@
+[[package]]
+name = "csv_to_gv_aon"
+version = "0.1.0"
+dependencies = [
+ "horrorshow 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "horrorshow"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum horrorshow 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)" = "597674f6c0cc85b1ad05a5383aad6809d4f85e935cdd96961faaa69d8896b624"
