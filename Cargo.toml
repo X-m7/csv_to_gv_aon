@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 horrorshow = "0.6.6"
+file_scanner = "0.2.0"
