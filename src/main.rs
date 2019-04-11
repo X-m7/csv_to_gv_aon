@@ -4,8 +4,7 @@ extern crate horrorshow;
 use std::env;
 use std::fs::File;
 
-extern crate file_scanner;
-use file_scanner::Scanner;
+extern crate csv;
 
 const GV_BEGIN: &str = "
 digraph aon {
@@ -29,39 +28,20 @@ fn get_activities_from_csv(input_filename: String) -> Vec<Activity> {
 	if file.is_err() {
 		panic!("Failed to read file");
 	}
-	let mut file = Scanner::new(file.unwrap());
-	file.next_line(); //skip the first line, assumed to be column titles
+	let mut rdr = csv::Reader::from_reader(file.unwrap());
 	let mut activities: Vec<Activity> = Vec::new();
-	let mut activity = Activity {id: "".to_string(), desc: "".to_string(), dur: 0, pred: Vec::new()};
-	while let Some(input) = file.next_line() {
-		let mut counter = 0;
-		for i in input.split(',') {
-			match counter {
-				0 => {
-					activity.id = i.to_string();
-					counter += 1;
-				},
-				1 => {
-					activity.desc = i.to_string();
-					counter += 1;
-				},
-				2 => {
-					activity.dur = i.to_string().parse::<u32>().unwrap();
-					counter += 1;
-				},
-				3 => {
-					if !i.is_empty() {
-						for j in i.to_string().split(';') {
-							activity.pred.push(j.to_string());
-						}
-					}
-					activities.push(activity);
-					activity = Activity {id: "".to_string(), desc: "".to_string(), dur: 0, pred: Vec::new()};
-					counter = 0;
-				},
-				_ => ()
+	for result in rdr.records() {
+		let record = result.unwrap();
+		activities.push(Activity {id: record.get(0).unwrap().to_string(), desc: record.get(1).unwrap().to_string(), dur: record.get(2).unwrap().to_string().parse::<u32>().unwrap(), pred: {
+			let mut vec: Vec<String> = Vec::new();
+			let preds = record.get(3).unwrap().to_string();
+			if !preds.is_empty() {
+				for i in preds.split(';') {
+					vec.push(i.to_string())
+				}
 			}
-		}
+			vec
+		}});
 	}
 	activities
 }
