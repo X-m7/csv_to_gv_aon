@@ -94,6 +94,10 @@ fn calc_stats(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> (Vec<Act
 		stats.late_finish = min_next_late_start;
 		stats.late_start = stats.late_finish - i.dur;
 	}
+	for i in &activities {
+		let mut stats = act_stats.get_mut(&i.id).unwrap();
+		stats.slack = stats.late_start - stats.early_start;
+	}
 	(activities, act_stats)
 }
 
@@ -115,24 +119,38 @@ struct Activity {
 
 impl Activity {
 	fn get_output(&self, stats: &ActivityStats) -> String {
-		format!("{}", html!(
-			table(border="0", cellborder="1", cellspacing="0") {
-				tr {
-					td: stats.early_start;
-					td: self.id.clone();
-					td: stats.early_finish;
+		if self.dur != 0 {
+			format!("{}", html!(
+				table(border="0", cellborder="1", cellspacing="0") {
+					tr {
+						td: stats.early_start;
+						td: self.id.clone();
+						td: stats.early_finish;
+					}
+					tr {
+						td: stats.slack;
+						td(colspan="2"): self.desc.clone();
+					}
+					tr {
+						td: stats.late_start;
+						td: self.dur;
+						td: stats.late_finish;
+					}
 				}
-				tr {
-					td: stats.slack;
-					td(colspan="2"): self.desc.clone();
+			))
+		}
+		else {
+			format!("{}", html!(
+				table(border="0", cellborder="1", cellspacing="0") {
+					tr {
+						td: self.id.clone();
+					}
+					tr {
+						td: self.desc.clone();
+					}
 				}
-				tr {
-					td: stats.late_start;
-					td: self.dur;
-					td: stats.late_finish;
-				}
-			}
-		))
+			))
+		}
 	}
 }
 
