@@ -10,7 +10,7 @@ node [shape = plain];
 
 fn main() {
 	let act = Activity {id: "1".to_string(), desc: "Desc".to_string(), dur: 2, pred: Vec::new()};
-	let act2 = Activity {id: "2".to_string(), desc: "Desc".to_string(), dur: 2, pred: Vec::new()};
+	let act2 = Activity {id: "2".to_string(), desc: "Desc".to_string(), dur: 2, pred: vec!["1".to_string()]};
     println!("{}", gen_gv(vec![act, act2]));
 }
 
@@ -46,10 +46,17 @@ impl Activity {
 
 fn gen_gv(activities: Vec<Activity>) -> String {
 	let mut output = GV_BEGIN.to_string();
+	let mut edges: Vec<(String, String)> = Vec::new();
 	for i in activities {
 		output.push_str(&format!("{} [label = <{}>];\n", i.id, i.get_output()));
+		for j in i.pred {
+			edges.push((j, i.id.clone()));
+		}
 	}
-	//add edges
+	output.push('\n');
+	for i in edges {
+		output.push_str(&format!("{} -> {}\n", i.0, i.1))
+	}
 	output.push_str("}");
 	output
 }
