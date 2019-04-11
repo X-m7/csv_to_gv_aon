@@ -70,6 +70,30 @@ fn calc_stats(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> (Vec<Act
 		stats.early_start = max_pred_early_finish;
 		stats.early_finish = stats.early_start + i.dur;
 	}
+	for i in &activities {
+		let mut stats = act_stats.get_mut(&i.id).unwrap();
+		if stats.next.is_empty() {
+			stats.late_finish = stats.early_finish;
+		}
+	}
+	for i in activities.iter().rev() {
+		let stats = &act_stats[&i.id];
+		let mut min_next_late_start = u32::max_value();
+		if !stats.next.is_empty() {
+			for j in &stats.next {
+				let j_stats = &act_stats[&j.clone()];
+				if j_stats.late_start < min_next_late_start {
+					min_next_late_start = j_stats.late_start;
+				}
+			}
+		}
+		else {
+			min_next_late_start = stats.early_finish;
+		}
+		let mut stats = act_stats.get_mut(&i.id).unwrap();
+		stats.late_finish = min_next_late_start;
+		stats.late_start = stats.late_finish - i.dur;
+	}
 	(activities, act_stats)
 }
 
