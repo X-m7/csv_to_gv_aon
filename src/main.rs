@@ -21,7 +21,7 @@ fn main() {
     }
 
 	let activities = get_activities_from_csv(args[1].to_string());
-    println!("{}", gen_gv(activities.0));
+    println!("{}", gen_gv(calc_stats(activities)));
 }
 
 fn get_activities_from_csv(input_filename: String) -> (Vec<Activity>, HashMap<String, ActivityStats>) {
@@ -56,6 +56,23 @@ fn get_activities_from_csv(input_filename: String) -> (Vec<Activity>, HashMap<St
 	(activities, act_stats)
 }
 
+fn calc_stats(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> (Vec<Activity>, HashMap<String, ActivityStats>) {
+	let (activities, mut act_stats) = acts;
+	for i in &activities { //forward path
+		let mut max_pred_early_finish = 0;
+		for j in &i.pred {
+			let j_stats = &act_stats[&j.clone()];
+			if j_stats.early_finish > max_pred_early_finish {
+				max_pred_early_finish = j_stats.early_finish;
+			}
+		}
+		let mut stats = act_stats.get_mut(&i.id).unwrap();
+		stats.early_start = max_pred_early_finish;
+		stats.early_finish = stats.early_start + i.dur;
+	}
+	(activities, act_stats)
+}
+
 struct ActivityStats {
 	early_start: u32,
 	late_start: u32,
@@ -73,33 +90,34 @@ struct Activity {
 }
 
 impl Activity {
-	fn get_output(&self) -> String {
+	fn get_output(&self, stats: &ActivityStats) -> String {
 		format!("{}", html!(
 			table(border="0", cellborder="1", cellspacing="0") {
 				tr {
-					td: "ES";
+					td: stats.early_start;
 					td: self.id.clone();
-					td: "EF";
+					td: stats.early_finish;
 				}
 				tr {
-					td: "SL";
+					td: stats.slack;
 					td(colspan="2"): self.desc.clone();
 				}
 				tr {
-					td: "LS";
+					td: stats.late_start;
 					td: self.dur;
-					td: "LF";
+					td: stats.late_finish;
 				}
 			}
 		))
 	}
 }
 
-fn gen_gv(activities: Vec<Activity>) -> String {
+fn gen_gv(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> String {
+	let (activities, act_stats) = acts;
 	let mut output = GV_BEGIN.to_string();
 	let mut edges: Vec<(String, String)> = Vec::new();
 	for i in activities {
-		output.push_str(&format!("{} [label = <{}>];\n", i.id, i.get_output()));
+		output.push_str(&format!("{} [label = <{}>];\n", i.id, i.get_output(&act_stats[&i.id])));
 		for j in i.pred {
 			edges.push((j, i.id.clone()));
 		}
