@@ -3,13 +3,15 @@ extern crate horrorshow;
 
 const GV_BEGIN: &str = "
 digraph aon {
-	rankdir=LR;
-	node [shape = plain];
+rankdir=LR;
+node [shape = plain];
+
 ";
 
 fn main() {
 	let act = Activity {id: "1".to_string(), desc: "Desc".to_string(), dur: 2, pred: Vec::new()};
-    println!("{}", gen_gv(vec![act]));
+	let act2 = Activity {id: "2".to_string(), desc: "Desc".to_string(), dur: 2, pred: Vec::new()};
+    println!("{}", gen_gv(vec![act, act2]));
 }
 
 struct Activity {
@@ -45,9 +47,9 @@ impl Activity {
 fn gen_gv(activities: Vec<Activity>) -> String {
 	let mut output = GV_BEGIN.to_string();
 	for i in activities {
-		output.push_str(&format!("{} [label = <{}>];", i.id, i.get_output()));
+		output.push_str(&format!("{} [label = <{}>];\n", i.id, i.get_output()));
 	}
 	//add edges
-	output.push_str("\n}");
+	output.push_str("}");
 	output
 }
