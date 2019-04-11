@@ -1,9 +1,15 @@
 #[macro_use]
 extern crate horrorshow;
 
+const GV_BEGIN: &str = "
+digraph aon {
+	rankdir=LR;
+	node [shape = plain];
+";
+
 fn main() {
 	let act = Activity {id: "1".to_string(), desc: "Desc".to_string(), dur: 2, pred: Vec::new()};
-    println!("{}", act.get_output());
+    println!("{}", gen_gv(vec![act]));
 }
 
 struct Activity {
@@ -34,4 +40,14 @@ impl Activity {
 			}
 		))
 	}
+}
+
+fn gen_gv(activities: Vec<Activity>) -> String {
+	let mut output = GV_BEGIN.to_string();
+	for i in activities {
+		output.push_str(&format!("{} [label = <{}>];", i.id, i.get_output()));
+	}
+	//add edges
+	output.push_str("\n}");
+	output
 }
