@@ -29,7 +29,7 @@ fn main() {
 /// - CSV file
 /// - First row as headers
 /// - Actual data from second row onwards with 4 columns (activity ID, description, duration, predecessors, in that order)
-/// - Predecessors as a string of activity IDs separated by semicolon
+/// - Predecessors as a string of activity IDs separated by comma (in one cell)
 /// - Activities are listed in such a way that the predecessors of each activity are located above it in the file
 fn get_activities_from_csv(
     input_filename: String,
@@ -68,7 +68,7 @@ fn get_activities_from_csv(
                 let id = record.get(0).unwrap().to_string();
                 if !preds.is_empty() {
                     //if it is we will end up with an empty string as a predecessor, need to ignore that
-                    for i in preds.split(';') {
+                    for i in preds.split(',') {
                         //for each listed predecessor
                         let i_str = i.to_string();
                         act_stats.get_mut(&i_str).unwrap().next.push(id.clone()); //store the current Activity being created as the successor of i
