@@ -22,7 +22,8 @@ fn main() {
     }
 
     let activities = get_activities_from_csv(args[1].to_string());
-    println!("{}", gen_gv(calc_stats(activities)));
+    let double_slack = args.len() == 3 && args[2] == "--dslack";
+    println!("{}", gen_gv(calc_stats(activities), double_slack));
 }
 
 /// Expected input file format:
@@ -157,7 +158,7 @@ struct Activity {
 
 impl Activity {
     ///Returns an HTML-style output for use by graphviz (dot format)
-    fn get_output(&self, stats: &ActivityStats) -> String {
+    fn get_output(&self, stats: &ActivityStats, double_slack: bool) -> String {
         if self.dur != 0 {
             //if it is a normal activity
             format!(
@@ -171,7 +172,12 @@ impl Activity {
                         }
                         tr {
                             td: stats.slack;
-                            td(colspan="2"): self.desc.clone();
+                            @ if double_slack {
+                                td: self.desc.clone();
+                                td: stats.slack;
+                            } else {
+                                td(colspan="2"): self.desc.clone();
+                            }
                         }
                         tr {
                             td: stats.late_start;
@@ -201,7 +207,7 @@ impl Activity {
 }
 
 ///Returns a String for consumption by graphviz (dot format) representing the activities as an Activity-on-Node diagram
-fn gen_gv(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> String {
+fn gen_gv(acts: (Vec<Activity>, HashMap<String, ActivityStats>), double_slack: bool) -> String {
     let (activities, act_stats) = acts;
     let mut output = GV_BEGIN.to_string();
     let mut edges: Vec<(String, String)> = Vec::new();
@@ -210,7 +216,7 @@ fn gen_gv(acts: (Vec<Activity>, HashMap<String, ActivityStats>)) -> String {
         output.push_str(&format!(
             "{} [label = <{}>];\n",
             i.id,
-            i.get_output(&act_stats[&i.id])
+            i.get_output(&act_stats[&i.id], double_slack)
         ));
         for j in i.pred {
             //store the edges to be created later
