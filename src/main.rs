@@ -21,7 +21,7 @@ fn main() {
         panic!("Input file name required as argument");
     }
 
-    let activities = get_activities_from_csv(args[1].to_string());
+    let activities = get_activities_from_csv(args[1].to_string(), false);
     let double_slack = args.len() == 3 && args[2] == "--dslack";
     println!("{}", gen_gv(calc_stats(activities), double_slack));
 }
@@ -32,8 +32,10 @@ fn main() {
 /// - Actual data from second row onwards with 4 columns (activity ID, description, duration, predecessors, in that order)
 /// - Predecessors as a string of activity IDs separated by comma (in one cell)
 /// - Activities are listed in such a way that the predecessors of each activity are located above it in the file
+/// - If get_explicit_stats is true then 2 more columns are required, which are early start and late finish, also in that order
 fn get_activities_from_csv(
     input_filename: String,
+    get_explicit_stats: bool,
 ) -> (Vec<Activity>, HashMap<String, ActivityStats>) {
     let file = File::open(input_filename);
     if file.is_err() {
@@ -45,24 +47,42 @@ fn get_activities_from_csv(
     for result in rdr.records() {
         //for each row of the CSV
         let record = result.unwrap();
+        let dur = record.get(2).unwrap().to_string().parse::<u32>().unwrap();
         let activity = Activity {
             id: {
                 let id = record.get(0).unwrap().to_string();
-                act_stats.insert(
-                    id.clone(),
-                    ActivityStats {
-                        early_start: 0,
-                        late_start: 0,
-                        early_finish: 0,
-                        late_finish: 0,
-                        slack: 0,
-                        next: Vec::new(),
-                    },
-                );
+                act_stats.insert(id.clone(), {
+                    if !get_explicit_stats {
+                        ActivityStats {
+                            early_start: 0,
+                            late_start: 0,
+                            early_finish: 0,
+                            late_finish: 0,
+                            slack: 0,
+                            next: Vec::new(),
+                        }
+                    } else {
+                        let early_start =
+                            record.get(4).unwrap().to_string().parse::<u32>().unwrap();
+                        let late_finish =
+                            record.get(5).unwrap().to_string().parse::<u32>().unwrap();
+                        let late_start = late_finish - dur;
+                        let early_finish = early_start + dur;
+                        let slack = late_finish - early_finish;
+                        ActivityStats {
+                            early_start,
+                            late_start,
+                            early_finish,
+                            late_finish,
+                            slack,
+                            next: Vec::new(),
+                        }
+                    }
+                });
                 id
             },
             desc: record.get(1).unwrap().to_string(),
-            dur: record.get(2).unwrap().to_string().parse::<u32>().unwrap(),
+            dur,
             pred: {
                 let mut vec: Vec<String> = Vec::new();
                 let preds = record.get(3).unwrap().to_string();
