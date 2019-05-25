@@ -20,10 +20,24 @@ fn main() {
     if args.len() < 2 {
         panic!("Input file name required as argument");
     }
+    let file_path = args[1].to_string();
+    let args = args.iter().skip(2);
+    let mut double_slack = false;
+    let mut explicit_stats = false;
+    for arg in args {
+        match arg.as_str() {
+            "--dslack" => double_slack = true,
+            "--estats" => explicit_stats = true,
+            _ => (),
+        }
+    }
 
-    let activities = get_activities_from_csv(args[1].to_string(), false);
-    let double_slack = args.len() == 3 && args[2] == "--dslack";
-    println!("{}", gen_gv(calc_stats(activities), double_slack));
+    let activities = get_activities_from_csv(file_path, explicit_stats);
+    if explicit_stats {
+        println!("{}", gen_gv(activities, double_slack));
+    } else {
+        println!("{}", gen_gv(calc_stats(activities), double_slack));
+    }
 }
 
 /// Expected input file format:
