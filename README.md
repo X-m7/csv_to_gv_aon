@@ -8,6 +8,7 @@ This program does not actually draw the diagram itself, it actually outputs <a h
 This program supports two parameters, which are:
  - `--dslack`: Places the slack value on both sides of the description as opposed to just the left side
  - `--estats`: Calculate the statistics based on given early start and late finish values in the CSV (so 2 more columns are required for them in that order)
+
 The file name must be the first parameter, followed by the other parameters. The extra parameters are optional, and can be in any order.
 
 ## Sample input
